@@ -1,0 +1,47 @@
+version: '3'
+
+vars:
+  APP_NAME: ddd-orders
+
+tasks:
+  default:
+    cmds:
+      - task: up
+
+  up:
+    desc: Запустить проект
+    cmds:
+      - docker compose up -d --build
+
+  down:
+    desc: Остановить проект
+    cmds:
+      - docker compose down
+
+  artisan:
+    desc: Запустить artisan команду
+    cmds:
+      - docker compose exec app php artisan {{.CLI_ARGS}}
+    vars:
+      CLI_ARGS: '{{default .CLI_ARGS "list"}}'
+
+  composer:
+    desc: Composer команды
+    cmds:
+      - docker compose exec app composer {{.CLI_ARGS}}
+
+  migrate:
+    desc: Миграции
+    cmds:
+      - task: artisan -- migrate
+
+  test:
+    desc: Запустить тесты
+    cmds:
+      - docker compose exec app php artisan test
+
+  fresh:
+    desc: Полная очистка и перезапуск
+    cmds:
+      - docker compose down -v
+      - task: up
