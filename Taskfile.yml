@@ -45,3 +45,19 @@ tasks:
     cmds:
       - docker compose down -v
       - task: up
+
+
+  cs:
+    desc: Запустить PHP CS Fixer (исправить код)
+    cmds:
+      - ./vendor/bin/php-cs-fixer fix --config=.php-cs-fixer.php --using-cache=no --verbose
+
+  cs:dry:
+    desc: Проверить код без изменений (dry-run)
+    cmds:
+      - ./vendor/bin/php-cs-fixer fix --config=.php-cs-fixer.php --using-cache=no --dry-run --verbose
+
+  cs:check:
+    desc: Только проверить (для CI/CD)
+    cmds:
+      - ./vendor/bin/php-cs-fixer fix --config=.php-cs-fixer.php --using-cache=no --dry-run --diff
