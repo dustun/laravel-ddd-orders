@@ -1,0 +1,55 @@
+name: CI Pipeline
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        php: [ '8.3' ]
+
+    name: PHP ${{ matrix.php }} - Quality Checks
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          coverage: none
+          tools: composer:v2
+
+      - name: Cache Composer packages
+        uses: actions/cache@v4
+        with:
+          path: vendor
+          key: ${{ runner.os }}-php-${{ matrix.php }}-${{ hashFiles('**/composer.lock') }}
+
+      - name: Install dependencies
+        run: composer install --prefer-dist --no-progress --no-interaction
+
+      - name: Check code style (PHP CS Fixer)
+        run: ./vendor/bin/php-cs-fixer fix --config=.php-cs-fixer.php --dry-run --diff --using-cache=no
+
+      - name: Run PHPStan
+        run: ./vendor/bin/phpstan analyse --no-progress
+
+      - name: Check strict_types declaration
+        run: |
+          echo "🔍 Проверяем наличие declare(strict_types=1) в каждом PHP-файле..."
+          MISSING=$(find app -name "*.php" -not -path "*/vendor/*" -exec grep -L "declare(strict_types=1);" {} + | wc -l)
+          if [ "$MISSING" -gt 0 ]; then
+            echo "❌ Обнаружено $MISSING файлов без declare(strict_types=1);"
+            find app -name "*.php" -not -path "*/vendor/*" -exec grep -L "declare(strict_types=1);" {} +
+            exit 1
+          else
+            echo "✅ Все PHP-файлы содержат declare(strict_types=1);"
+          fi
