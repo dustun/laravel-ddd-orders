@@ -1,8 +1,5 @@
 version: '3'
 
-vars:
-  APP_NAME: ddd-orders
-
 tasks:
   default:
     cmds:
@@ -18,46 +15,97 @@ tasks:
     cmds:
       - docker compose down
 
-  artisan:
-    desc: Запустить artisan команду
+  restart:
+    desc: Перезапустить проект
     cmds:
-      - docker compose exec app php artisan {{.CLI_ARGS}}
-    vars:
-      CLI_ARGS: '{{default .CLI_ARGS "list"}}'
+      - task: down
+      - task: up
+
+  artisan:
+    desc: Запустить artisan команду (полное название)
+    cmds:
+      - sh -c 'docker compose exec app php artisan {{if .CLI_ARGS}}{{.CLI_ARGS}}{{else}}list{{end}}'
+
+  # ==================== Миграции ====================
+  migrate:
+    desc: Запустить миграции
+    cmds:
+      - task: artisan
+        vars:
+          CLI_ARGS: migrate
+
+  migrate:fresh:
+    desc: Пересоздать все таблицы + сиды
+    cmds:
+      - task: artisan
+        vars:
+          CLI_ARGS: "migrate:fresh --seed"
+
+  migrate:rollback:
+    desc: Откатить миграцию
+    cmds:
+      - task: artisan
+        vars:
+          CLI_ARGS: migrate:rollback
+
+  # ==================== IDE Helper ====================
+  ide-helper:generate:
+    desc: Сгенерировать _ide_helper.php
+    cmds:
+      - task: artisan
+        vars:
+          CLI_ARGS: ide-helper:generate
+
+  ide-helper:models:write:
+    desc: Записать phpDoc для моделей
+    cmds:
+      - task: artisan
+        vars:
+          CLI_ARGS: "ide-helper:models --write"
+
+  ide-helper:all:
+    desc: Полная генерация IDE helpers
+    cmds:
+      - task: ide-helper:generate
+      - task: ide-helper:models:write
+
+  # ==================== Другие ====================
+  seed:
+    desc: Запустить сидеры
+    cmds:
+      - task: artisan
+        vars:
+          CLI_ARGS: db:seed
+
+  fresh:
+    desc: Полная очистка + миграции
+    cmds:
+      - task: down
+      - task: up
+      - task: migrate:fresh
 
   composer:
     desc: Composer команды
     cmds:
       - docker compose exec app composer {{.CLI_ARGS}}
 
-  migrate:
-    desc: Миграции
+  logs:
+    desc: Логи приложения
     cmds:
-      - task: artisan -- migrate
+      - docker compose logs app --tail=100
 
-  test:
-    desc: Запустить тесты
+  logs:caddy:
+    desc: Логи Caddy
     cmds:
-      - docker compose exec app php artisan test
+      - docker compose logs caddy --tail=100
 
-  fresh:
-    desc: Полная очистка и перезапуск
-    cmds:
-      - docker compose down -v
-      - task: up
-
-
+  # Code Quality
   cs:
-    desc: Запустить PHP CS Fixer (исправить код)
+    desc: PHP CS Fixer — исправить код
     cmds:
       - ./vendor/bin/php-cs-fixer fix --config=.php-cs-fixer.php --using-cache=no --verbose
 
   cs:dry:
-    desc: Проверить код без изменений (dry-run)
+    desc: PHP CS Fixer — проверить без изменений
     cmds:
       - ./vendor/bin/php-cs-fixer fix --config=.php-cs-fixer.php --using-cache=no --dry-run --verbose
-
-  cs:check:
-    desc: Только проверить (для CI/CD)
-    cmds:
-      - ./vendor/bin/php-cs-fixer fix --config=.php-cs-fixer.php --using-cache=no --dry-run --diff
