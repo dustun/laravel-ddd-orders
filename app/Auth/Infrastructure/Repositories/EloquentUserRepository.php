@@ -8,29 +8,22 @@ use App\Auth\Domain\Contracts\UserRepositoryInterface;
 use App\Auth\Domain\Entities\User as DomainUser;
 use App\Auth\Infrastructure\Models\EloquentUser;
 use App\Shared\ValueObjects\Email;
-use App\Shared\ValueObjects\Password;
-use App\Shared\ValueObjects\UUID;
 
-final class EloquentUserRepository implements UserRepositoryInterface
+class EloquentUserRepository implements UserRepositoryInterface
 {
-    public function byId(int $id): ?DomainUser
+    public function byId(string $id): ?EloquentUser
     {
-        $eloquentUser = EloquentUser::query()
-            ->find($id);
-
-        return $eloquentUser ? $this->toDomain($eloquentUser) : null;
+        return EloquentUser::query()->find($id);
     }
 
-    public function byEmail(Email $email): ?DomainUser
+    public function byEmail(Email $email): ?EloquentUser
     {
-        $eloquentUser = EloquentUser::query()
+        return EloquentUser::query()
             ->where('email', $email->value())
             ->first();
-
-        return $eloquentUser ? $this->toDomain($eloquentUser) : null;
     }
 
-    public function save(DomainUser $user): bool
+    public function save(DomainUser $user): void
     {
         $eloquentUser = new EloquentUser();
 
@@ -39,16 +32,6 @@ final class EloquentUserRepository implements UserRepositoryInterface
         $eloquentUser->email    = $user->email->value();
         $eloquentUser->password = $user->password->value();
 
-        return $eloquentUser->save();
-    }
-
-    private function toDomain(EloquentUser $user): DomainUser
-    {
-        return new DomainUser(
-            id: new UUID($user->id),
-            name: $user->name,
-            email: new Email($user->email),
-            password: new Password($user->password),                    // пароль не загружаем в Entity
-        );
+        $eloquentUser->save();
     }
 }

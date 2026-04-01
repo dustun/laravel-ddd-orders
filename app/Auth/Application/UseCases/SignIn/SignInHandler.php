@@ -4,26 +4,38 @@ declare(strict_types=1);
 
 namespace App\Auth\Application\UseCases\SignIn;
 
-use App\Infrastructure\Repositories\UserRepositoryInterface;
+use App\Auth\Domain\Contracts\UserRepositoryInterface;
+use App\Shared\Services\HasherService;
 use App\Shared\ValueObjects\Email;
-use App\Shared\ValueObjects\Password;
-use Exception;
+use DomainException;
 
 readonly class SignInHandler
 {
     public function __construct(
         private UserRepositoryInterface $userRepository,
+        private HasherService $hasherService,
     ) {}
 
-    public function handle(SignInInput $data): void
+    public function handle(
+        SignInInput $data
+    ): SignInOutput
     {
         $email = new Email($data->email);
-        $password = new Password($data->password);
 
-        if ($this->userRepository->findByEmail($email)) {
-            throw new Exception('Email already exists');
+        $eloquentUser = $this->userRepository->byEmail($email);
+
+        if (!$eloquentUser) {
+            throw new DomainException('Неверный email или пароль');
         }
 
-        $this->userRepository->save($user);
+        if (!$this->hasherService->verify($data->password, $eloquentUser->password)) {
+            throw new DomainException('Неверный email или пароль');
+        }
+
+        $token = $eloquentUser->createToken('auth_token')->plainTextToken;
+
+        return new SignInOutput(
+            token: $token,
+        );
     }
 }
