@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace App\Auth\Infrastructure\Models;
 
-use Illuminate\Foundation\Auth\User;
+use Illuminate\Auth\MustVerifyEmail as MustVerifyEmailTrait;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Carbon;
 use Laravel\Sanctum\HasApiTokens;
 
@@ -12,16 +15,17 @@ use Laravel\Sanctum\HasApiTokens;
  * Class EloquentUser
  *
  * @property string $id
- * @property string $name
  * @property string $email
- * @property string $password
+ * @property string $name
  *
  * @property Carbon $created_at
  * @property Carbon $updated_at
  */
-class EloquentUser extends User
+class EloquentUser extends Authenticatable implements MustVerifyEmail
 {
     use HasApiTokens;
+    use Notifiable;
+    use MustVerifyEmailTrait;
 
     public $incrementing = false;
     protected $keyType = 'string';
@@ -29,6 +33,7 @@ class EloquentUser extends User
     protected $table = 'users';
 
     protected $fillable = [
+        'id',
         'name',
         'email',
         'password',
@@ -41,7 +46,7 @@ class EloquentUser extends User
 
     protected $casts = [
         'email_verified_at' => 'datetime',
-        'created_at' => 'datetime',
-        'updated_at' => 'datetime',
+        'created_at'        => 'datetime',
+        'updated_at'        => 'datetime',
     ];
 }

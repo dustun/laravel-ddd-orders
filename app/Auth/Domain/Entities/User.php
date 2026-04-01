@@ -7,6 +7,7 @@ namespace App\Auth\Domain\Entities;
 use App\Shared\ValueObjects\Email;
 use App\Shared\ValueObjects\Password;
 use App\Shared\ValueObjects\UUID;
+use DateTimeImmutable;
 
 class User
 {
@@ -15,5 +16,6 @@ class User
         public string   $name,
         public Email    $email,
         public Password $password,
+        public ?DateTimeImmutable $emailVerifiedAt = null,
     ) {}
 }
