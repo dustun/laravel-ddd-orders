@@ -4,16 +4,28 @@ services:
   app:
     build:
       context: .
-      dockerfile: docker/Dockerfile
+      dockerfile: Dockerfile
     container_name: ddd-orders-app
     volumes:
       - .:/var/www/html
-    ports:
-      - "8000:80"
-    environment:
-      - APP_ENV=local
     depends_on:
       - db
+    networks:
+      - laravel
+
+  caddy:
+    image: caddy:2-alpine
+    container_name: ddd-orders-caddy
+    ports:
+      - "8000:80"
+      - "443:443"
+    volumes:
+      - .:/var/www/html
+      - ./.docker/caddy/Caddyfile:/etc/caddy/Caddyfile
+    depends_on:
+      - app
+    networks:
+      - laravel
 
   db:
     image: postgres:16-alpine
@@ -26,6 +38,12 @@ services:
       - "5432:5432"
     volumes:
       - postgres-data:/var/lib/postgresql/data
+    networks:
+      - laravel
+
+networks:
+  laravel:
+    driver: bridge
 
 volumes:
   postgres-data:
