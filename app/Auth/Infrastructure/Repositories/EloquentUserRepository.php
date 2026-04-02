@@ -27,10 +27,11 @@ class EloquentUserRepository implements UserRepositoryInterface
     {
         $eloquentUser = new EloquentUser();
 
-        $eloquentUser->id       = $user->id->value();
-        $eloquentUser->name     = $user->name;
-        $eloquentUser->email    = $user->email->value();
-        $eloquentUser->password = $user->password->value();
+        $eloquentUser->id                = $user->id->value();
+        $eloquentUser->name              = $user->name;
+        $eloquentUser->email             = $user->email->value();
+        $eloquentUser->password          = $user->password->value();
+        $eloquentUser->email_verified_at = $user->emailVerifiedAt?->format('Y-m-d H:i:s');
 
         $eloquentUser->save();
     }

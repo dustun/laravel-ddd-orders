@@ -24,7 +24,7 @@ tasks:
   artisan:
     desc: Запустить artisan команду (полное название)
     cmds:
-      - sh -c 'docker compose exec app php artisan {{if .CLI_ARGS}}{{.CLI_ARGS}}{{else}}list{{end}}'
+      - sh -c 'docker compose exec app php artisan "$@"' -- "$@"
 
   # ==================== Миграции ====================
   migrate:
