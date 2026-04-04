@@ -1,4 +1,4 @@
-# Laravel DDD Orders Tutorial
+# Laravel DDD Tutorial
 
 Обучающий проект, демонстрирующий практическое применение **Domain-Driven Design (DDD)** и Clean Architecture в Laravel.
 
